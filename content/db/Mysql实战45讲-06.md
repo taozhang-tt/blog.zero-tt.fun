@@ -1,6 +1,7 @@
 ---
 title: 06 | 全局锁和表锁 ：给表加个字段怎么有这么多阻碍？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

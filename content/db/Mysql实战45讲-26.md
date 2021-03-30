@@ -1,6 +1,7 @@
 ---
 title: 26 | 备库为什么会延迟好几个小时？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

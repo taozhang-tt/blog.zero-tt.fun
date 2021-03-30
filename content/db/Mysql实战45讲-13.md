@@ -1,6 +1,7 @@
 ---
 title: 13 | 为什么表数据删掉一半，表文件大小不变？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

@@ -1,6 +1,7 @@
 ---
 title: 17 | 如何正确地显示随机消息？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

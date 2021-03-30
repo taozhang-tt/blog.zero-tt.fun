@@ -1,6 +1,7 @@
 ---
 title: 19 | 为什么我只查一行的语句，也执行这么慢？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

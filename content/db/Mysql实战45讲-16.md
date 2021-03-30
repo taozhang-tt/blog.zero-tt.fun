@@ -1,6 +1,7 @@
 ---
 title: 16 | “order by”是怎么工作的？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

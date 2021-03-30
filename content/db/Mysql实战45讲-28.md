@@ -1,6 +1,7 @@
 ---
 title: 28 | 读写分离有哪些坑？
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

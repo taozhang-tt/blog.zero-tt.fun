@@ -1,6 +1,7 @@
 ---
 title: 04 | 深入浅出索引（上）
 date: 2021-03-10
+disqus: true # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

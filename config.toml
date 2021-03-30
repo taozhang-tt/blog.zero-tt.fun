@@ -1,7 +1,8 @@
-baseURL = "http://example.org/"
+baseURL = "http://zero-tt.fun"
 languageCode = "zh-cn"
 title = "TT"
 theme = "mainroad"
+DisqusShortname = "wuchang-blog"
 
 [Author] # Used in authorbox
   name = "TT"
@@ -30,6 +31,7 @@ theme = "mainroad"
   highlightColor = "" # Deprecated in favor of .Site.Params.style.vars.highlightColor
   customCSS = ["css/custom.css"] # Include custom CSS files
   customJS = ["js/custom.js"] # Include custom JS files
+  comments = true
 
 [Params.style.vars]
   highlightColor = "#e22d30" # Override highlight color
