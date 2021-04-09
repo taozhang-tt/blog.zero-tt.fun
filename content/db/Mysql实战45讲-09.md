@@ -1,7 +1,7 @@
 ---
 title: 09 | 普通索引和唯一索引，应该怎么选择
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

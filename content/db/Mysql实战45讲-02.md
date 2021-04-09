@@ -1,7 +1,7 @@
 ---
 title: 02 | 日志系统：一条SQL更新语句是如何执行的
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

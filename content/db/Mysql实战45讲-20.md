@@ -1,7 +1,7 @@
 ---
 title: 20 | 幻读是什么，幻读有什么问题？
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

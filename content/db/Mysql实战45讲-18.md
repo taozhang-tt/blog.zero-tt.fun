@@ -1,7 +1,7 @@
 ---
 title: 18 | 为什么这些SQL语句逻辑相同，性能却差异巨大？
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

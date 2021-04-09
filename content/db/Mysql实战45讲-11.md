@@ -1,7 +1,7 @@
 ---
 title: 11 | 怎么给字符串字段加索引？
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

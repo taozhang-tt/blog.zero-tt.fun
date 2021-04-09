@@ -1,7 +1,7 @@
 ---
 title: 07 | 行锁功过：怎么减少行锁对性能的影响？
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:

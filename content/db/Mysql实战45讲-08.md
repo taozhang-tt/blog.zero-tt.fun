@@ -1,7 +1,7 @@
 ---
 title: 08 | 事务到底是隔离的还是不隔离的
 date: 2021-03-10
-disqus: true # 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "Mysql"
 tags:
