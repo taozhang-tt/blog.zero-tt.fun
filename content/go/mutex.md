@@ -21,7 +21,9 @@ tags:
 
 ![20210422194929](http://pic.zero-tt.fun/note/20210422194929.png)
 
-[源码下载地址](https://codeload.github.com/golang/go/zip/refs/tags/go-weekly.2009-11-06)，部分代码片段如下：
+[源码下载地址](https://codeload.github.com/golang/go/zip/refs/tags/go-weekly.2009-11-06)
+
+部分代码片段如下：
 ```
 package sync
 
@@ -72,11 +74,12 @@ func (m *Mutex) Unlock() {
 这里提一下两个对信号量的操作：`runtime.Semacquire(&m.sema)` 和 `runtime.Semrelease(&m.sema)`，函数的实现在 src/pkg/runtime/sema.cgo 文件中，底层的数据结构是双向链表，进程的唤醒是 FIFO 顺序；也就是说在时间顺序上，越早被阻塞的 G，会越早被唤醒。
 
 **初版存在的性能问题：**
-请求锁的 goroutine 会排队等候获取互斥锁，貌似很公平，但是从性能上来看，却不是最优的。如果我们能够把锁交给正在占用 CPU 时间片的 goroutine，那就不需要做上下文切换，在高并发的情况下，会有更好的性能。所以就有了第二个版本**给新人机会**。
+请求锁的 goroutine 会排队等候获取互斥锁，貌似很公平，但是从性能上来看，却不是最优的。如果我们能够把锁交给正在占用 CPU 时间片的 goroutine，那就不需要做上下文切换，在高并发的情况下，会有更好的性能。所以就有了第二个版本 **给新人机会**。
 
 ##  给新人机会
 [代码下载地址](https://codeload.github.com/golang/go/zip/refs/tags/go1.0.1)
-给新人机会的意思是，当新的 goroutine 请求锁时，和被唤醒的 goroutine 一起抢夺锁，而不是放到 waiter 队列的最后面等待调度。
+
+给新人机会的意思是，当新来的 goroutine 请求锁时，和被唤醒的 goroutine 一起抢夺锁，而不是放到 waiter 队列的最后面等待调度。
 
 Mutex 结构体：
 ```
@@ -139,6 +142,7 @@ func (m *Mutex) Lock() {
 解锁：
 ```
 func (m *Mutex) Unlock() {
+	// Fast path: drop lock bit.
 	// 去除锁的标识位，这一步执行结束，如果有其它的 goroutine 来抢夺锁，是可以成功获取到锁的
 	new := atomic.AddInt32(&m.state, -mutexLocked)
 	// 解锁一个没有上锁的锁，直接panic
@@ -149,7 +153,8 @@ func (m *Mutex) Unlock() {
 	old := new
 	for {
 		// 没有其它 waiter，或是已经有其它 goroutine 获取到锁，或是有其它waiter被唤醒
-		// 这里要说一下，下面的唤醒操作还没执行，为什么会有被唤醒的 waiter？因为上一步的解锁操作完成后，如果有新来的 goroutine 获取到锁，并执行结束，同时完成了解锁操作，它就有可能唤醒了其它 waiter
+		// 这里要说一下，为什么会有被唤醒的 waiter？
+		// 因为上一步的解锁操作完成后，如果有新来的 goroutine 获取到锁，并执行结束，同时完成了解锁操作，它就有可能唤醒了其它 waiter
 		if old>>mutexWaiterShift == 0 || old&(mutexLocked|mutexWoken) != 0 {
 			return
 		}
@@ -160,16 +165,16 @@ func (m *Mutex) Unlock() {
 			runtime_Semrelease(&m.sema) // 唤醒1个 waiter
 			return // 老子的解锁操作终于做完了
 		}
-		// 完了，上一步所说的唤醒操作没成功！没办法只好获取最新的锁状态，再重复一遍上面的操作
+		// 完了，上一步所说的尝试唤醒操作没成功！没办法只好获取最新的锁状态，再重复一次
 		old = m.state
 	}
 }
-
 ```
 ## 多给一些机会
 
 [代码地址](https://codeload.github.com/golang/go/zip/refs/tags/go1.5)
-对于新来的和被唤醒的，它们的机会是一样的，这次的优化是多给一些机会
+
+对于新来的和被唤醒的，它们的获得锁的机会是差不多的，这次的优化是多给它们一些机会，目的是减少阻塞、唤醒的次数，具体的做法看代码
 
 上锁：
 ```
@@ -219,7 +224,7 @@ func (m *Mutex) Lock() {
 	}
 }
 ```
-和上一个版本的思路几乎完全一样，增加了自旋操作(可简单理解为，多尝试几次获取锁的操作，实在获取不到再阻塞等待)，如果临界区的代码耗时很短，锁很快就能被释放，抢夺锁的 goroutine 不用通过休眠唤醒方式等待调度，直接自旋几次，可能就获取到了锁。
+和上一个版本的思路几乎完全一样，只是增加了自旋操作(可简单理解为，多尝试几次获取锁的操作，实在获取不到再阻塞等待)，如果临界区的代码耗时很短，锁很快就能被释放，抢夺锁的 goroutine 不用通过休眠唤醒方式等待调度，直接自旋几次，可能就获取到了锁。
 
 解锁的操作和上个版本完全一样。
 
@@ -264,7 +269,7 @@ func (m *Mutex) lockSlow() {
 	iter := 0         // 自旋次数
 	old := m.state
 	for {
-		// 锁被持有 & 当前是非饥饿状态 & 满足自旋条件，进行自旋操作
+		// 锁被持有 & 当前是非饥饿状态 & 满足自旋条件 => 进行自旋操作
 		// 如果是饥饿模式，那就别自旋了，赶紧给老同志让路
 		if old&(mutexLocked|mutexStarving) == mutexLocked && runtime_canSpin(iter) {
 			// 自旋过程中，尝试把自己设置为被唤醒的状态
@@ -311,7 +316,7 @@ func (m *Mutex) lockSlow() {
 				waitStartTime = runtime_nanotime()
 			}
 			runtime_SemacquireMutex(&m.sema, queueLifo, 1) // 阻塞等待
-			// 执行这一句的时候，次 goroutine 已经被唤醒了
+			// 执行这一句的时候，这个 goroutine 已经被唤醒了
 			starving = starving || runtime_nanotime()-waitStartTime > starvationThresholdNs // 判断是否满足饥饿条件：距离上次执行的时间已经超过了 1 毫秒
 			old = m.state
 			if old&mutexStarving != 0 { // 饥饿模式，直接抢到锁，返回
