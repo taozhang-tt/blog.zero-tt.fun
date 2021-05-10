@@ -70,3 +70,9 @@ DisqusShortname = "wuchang-blog"
 #   gitlab = "username"
 #   bitbucket = "username"
   email = "taozhang.tt@gmail.com"
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 2
+    ordered = false
+    startLevel = 1
