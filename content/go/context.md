@@ -54,8 +54,8 @@ func main() {
 
 	time.Sleep(10 * time.Second)
 	fmt.Println("可以了，通知监控停止")
-	close(stop)
-	//stop<- true
+	//close(stop)
+	stop<- true
 	//为了检测监控过是否停止，如果没有监控输出，就表示停止了
 	time.Sleep(5 * time.Second)
 }
@@ -67,7 +67,7 @@ func main() {
 将例子中 `stop<- true` 注释掉，将 `close(stop)` 取消注释，再运行一次，两个 goroutine 都能正常停止；这是因为我们这次直接关闭了 `stop` 通道；`尝试从一个已经被关闭的通道里读取数据，会读取到对应数据类型的 0 值和一个 false 标志`；所以当我们关闭了通道时，两个 gorotine 里的 select 操作都会读取到值：false, false
 
 
-### 2. 使用 context 控制单个 goroutine 停止
+## 2. 使用 context 控制单个 goroutine 停止
 
 context 是 GO 语言为我们提供的上下文，可以用来跟踪 goroutine；其实质还是通过通道传递停止讯号，下面是一个简单的例子：
 
@@ -141,7 +141,7 @@ func (c *cancelCtx) Done() <-chan struct{} {
 ```
 我们发现这里对 `c.done` 做了初始化，所以当我们执行 `case <-ctx.Done()` 时，就进行了这一初始化操作，看到这里也就解决了我上述的疑惑；
 
-### 3. 使用 context 控制多个 goroutine 停止
+## 3. 使用 context 控制多个 goroutine 停止
 ```
 //使用 context 控制多个 goroutine 的停止
 package main
@@ -180,7 +180,7 @@ func watch(ctx context.Context, name string) {
 ```
 这个例子和 1 中的例子是一样的，不再多做解释
 
-### 3. 使用 context 控制嵌套的 goroutine 停止
+## 4. 使用 context 控制嵌套的 goroutine 停止
 `context` 是有层级或者说是父子关系的，当父 `context` 取消的时候，它的所有孩子、孩子的孩子也都会被一并取消，下面来看一个例子：
 
 ```
