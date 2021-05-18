@@ -1,5 +1,5 @@
 ---
-title: Mutex 源码浅析 & Mutex 演变历程
+title: Go Mutex 源码浅析 & Mutex 演变历程
 date: 2021-04-22
 disqus: false # 是否开启disqus评论
 categories:

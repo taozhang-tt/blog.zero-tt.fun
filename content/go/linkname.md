@@ -1,5 +1,5 @@
 ---
-title: go:linkname 是个啥
+title: Go go:linkname 是个啥
 date: 2021-04-21
 disqus: false # 是否开启disqus评论
 categories:

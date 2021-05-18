@@ -1,5 +1,5 @@
 ---
-title: golang 防缓存击穿利器 - singleflight
+title: Go 防缓存击穿利器 - singleflight
 date: 2021-04-20
 disqus: false # 是否开启disqus评论
 categories:
