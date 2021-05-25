@@ -8,7 +8,7 @@ categories:
   
 <!--more-->
 
-## git 命令别名
+## git comment alias
 ```
 [alias]
     st = status
@@ -29,10 +29,25 @@ categories:
     mt = mergetool
  ```
 
-## Git 常用命令
+## git common commands
 
-查看本地分支与远程分支的对应关系
-`git br -vv`
+view all branch
+```
+git br -vv
+```
 
-修改本地分支与远程分支的对应关系
-`git br --set-upstream-to origin/newBranch`
+Modify the correspondence between the local branch and the remote branch
+```
+git br --set-upstream-to origin/remote_br_name
+```
+
+delete local branch
+```
+git br -d local_branch_name
+```
+
+delete remote branch
+```
+git ps origin -d remote_branch_name
+```
+
