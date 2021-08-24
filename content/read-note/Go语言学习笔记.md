@@ -96,6 +96,29 @@ new 函数也可以用来给引用类型分配内存，但这并不是完整的�
     * 将默认值nil赋值给切片、字典、通道、指针、函数、接口
     * 对象实现了接口
 
+### 补充: 命名类型和未命名类型
+> https://blog.csdn.net/wohu1104/article/details/106202792
+
+命名类型：类型可以通过标识符来表示，这种类型称为**命名类型**(Named Type)。包括Go语言预声明的简单类型和用户自定义类型。
+
+未命名类型: 一个类型由预声明类型、关键字和操作符组成，这个类型称为**未命名类型**(Unamed Type)。未命名类型又称为类型字面量(Type Literal)。
+
+数组、切片、字典、通道、指针、函数字面量、结构和接口都属于类型字面量，都是未命名类型。这里所说的结构和接口是指没有使用 `type` 定义：
+```
+a := struct {
+    name string
+    age  int
+}{"TT", 18}
+fmt.Printf("%T\n", a) // struct { name string; age int }
+
+type Person struct {
+    name string
+    age  int
+}
+b := Person{"TT", 18}
+fmt.Printf("%T\n", b) // main.Person
+```
+
 ## 第3章 表达式
 
 ### 3.2 运算符
@@ -429,4 +452,162 @@ println(unsafe.Sizeof(a), unsafe.Sizeof(b)) // 0 0
 
 字段标签(tag)并不是注释，它不属于数据成员，但却是类型的组成部分。
 
+匿名字段是指没有名字仅有类型的字段，也被称作嵌入字段或嵌入类型。
+```
+type attr struct {
+    perm int
+}
 
+type file struct {
+    name string
+    attr
+}
+```
+
+从编译器角度看，这只是隐式地以类型名字作为字段名字。可直接引用匿名字段的成员，但初始化时须当做独立字段。
+```
+f := file{
+    name: "file_name",
+    attr: attr{         // 显示初始化匿名字段
+        perm: 0755,
+    },
+}
+f.perm = 0644           // 直接设置匿名字段成员
+println(f.perm)         // 直接读取匿名字段成员
+```
+
+迁移其它包中的类型，则隐式字段名字不包含包名。
+
+不仅仅是结构体，除接口指针和多级指针以外的任何命名类型都可作为匿名字段。
+
+未命名类型不能作为匿名字段，因为未命名类型没有名字标识。
+
+不能将基础类型和其指针类型同时嵌入，因为两者隐式名字相同。
+
+
+## 第6章 方法
+
+### 6.1 定义
+
+方法可以看做特殊的函数，receiver 类型可以是基础类型或指针类型，这会关系到调用时对象实例是否被复制。
+
+可使用实例或指针调用方法，编译器会根据方法receiver类型自动在基础类型和指针类型间转换。
+
+不能用多级指针调用方法。
+
+指针类型的receiver必须是合法指针(包括nil)，或能获取实例地址。
+```
+var a *X
+a.test() // 相当于 test(nil)
+X{}.test() // 报错：cannot take the address of X literal
+```
+
+* 如何选择方法的 receiver 类型
+    * 要修改实例状态，用 *T
+    * 无须修改状态的小对象或固定值，建议用 T
+    * 大对象建议用 *T，减少复制成本
+    * 引用类型、字符串、函数等指针包装类型，直接用 T
+    * 若包含 Mutex 等同步字段，用 *T，避免因复制造成锁操作无效。
+    * 其它无法确定的情况，都用 *T
+
+### 6.2 匿名字段
+
+可以像访问匿名字段成员那样调用其方法，由编译器负责查找。
+
+尽管能直接访问匿名字段的成员和方法，但它们依然不属于继承关系。
+
+### 6.3 方法集
+
+* 类型有一个与之相关的方法集，这决定了它是否实现了某个接口
+    * 类型 T 方法集包含所有 receiver 为 T 的方法
+    * 类型 *T 方法集包含所有 receiver 为 T + *T 的方法
+    * 匿名嵌入 S，T 方法集包含所有 receiver 是 S 的方法
+    * 匿名嵌入 *S，T 方法集包含所有 receiver 是 S + *S 的方法
+    * 匿名侵入 S 或 *S，*T 方法集包含所有 receiver 为 S + *S 的方法
+
+ ```
+func main() {
+    var t T
+    methodSet(t)
+    fmt.Println("---------------")  
+    methodSet(&t)
+}       
+        
+type S struct{}
+        
+type T struct {
+    S   
+}       
+        
+func (s S) SVal() {}
+func (*S) SPtr()  {}
+func (T) TVal()   {}
+func (*T) TPtr()  {}
+        
+func methodSet(a interface{}) {
+    t := reflect.TypeOf(a)
+        
+    for i, n := 0, t.NumMethod(); i < n; i++ {
+        m := t.Method(i)                                                                                                                               
+        fmt.Println(m.Name, m.Type)    
+    }   
+} 
+
+// SVal func(main.T)
+// TVal func(main.T)
+// ---------------
+// SPtr func(*main.T)
+// SVal func(*main.T)
+// TPtr func(*main.T)
+// TVal func(*main.T)
+ ```
+输入结果符合预期，但我们注意到某些方法的 receiver 发生了改变。真实情况是，这些都是是编译器按方法集所需自动生成的额外方法。
+
+### 6.4 表达式
+
+通过类型引用的 method expression 会被还原为普通函数样式，receiver 是第一参数；调用时须显示传参，至于类型，可以是 T 或 *T，只要目标方法存在于该类型方法集中即可。编译器会保证按原定义类型拷贝传值。
+
+基于实例或指针引用的 method value，参数签名不会改变，依旧按正常方式调用。但当 method value 被赋值给变量或作为参数传递时，会立即计算并复制该方法执行所需的receiver对象，与其绑定，以便在稍后执行时，能隐式传入receiver参数。
+```
+func main() {
+    var n N = 100
+    p := &n
+
+    n++
+    f1 := n.test // 因为test方法的receiver是 N 类型，所以复制n，等于 101
+
+    n++
+    f2 := n.test // 还是因为test方法的receiver是 N 类型，这里虽然会复制一个 *p，但绑定的还是 p，而不是 *p，所以是 102
+
+    n++
+    fmt.Printf("main.n: %p, %v\n", p, n)
+
+    f1()
+    f2()
+}
+
+type N int
+
+func (n N) test() {
+    fmt.Printf("test.n: %p, %v\n", &n, n)
+}
+
+// main.n: 0xc000096010, 103
+// test.n: 0xc000096028, 101
+// test.n: 0xc000096038, 102
+```
+
+## 第7章 接口
+
+### 7.1 定义
+
+从内部实现看，接口自身也是一种结构类型，只是编译器会对其做出很多限制：
+* 不能有字段
+* 不能定义自己的方法
+* 只能声明方法，不能实现
+* 可嵌入其它接口类型
+* 接口通常以er作为名称后缀，方法名是声明组成部分，参数名可不同或省略
+
+编译器根据方法集来判断是否实现了接口。
+
+嵌入其它接口类型，相当于将其声明的方法集导入，这就要求不能有同名方法。
