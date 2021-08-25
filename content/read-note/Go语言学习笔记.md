@@ -2,7 +2,7 @@
 title: 《Go语言学习笔记》笔记
 description: Go 学习记录
 date: 2021-08-18
-disqus: false# 是否开启disqus评论
+disqus: false # 是否开启disqus评论
 categories:
   - "读书笔记"
 tags:
@@ -611,3 +611,64 @@ func (n N) test() {
 编译器根据方法集来判断是否实现了接口。
 
 嵌入其它接口类型，相当于将其声明的方法集导入，这就要求不能有同名方法。
+
+### 7.2 执行机制
+
+接口使用一个名为 `itab` 的结构存储运行期所需的相关类型信息。
+```
+type iface struct {
+    tab  *itab          // 类型信息
+    data unsafe.Pointer // 实际对象指针
+}
+
+type itab struct {                                                                                                                                     
+    inter *interfacetype    // 接口类型
+    _type *_type            // 实际对象类型
+    hash  uint32 // copy of _type.hash. Used for type switches.
+    _     [4]byte
+    fun   [1]uintptr // 实际对象方法地址
+} 
+```
+
+将对象赋值给接口变量时，会复制该对象。
+
+无法修改接口存储的复制品，因为它是 unadressable 的。解决方法是讲对象指针赋值给接口，那么接口内存储的就是指针的复制品。
+
+只有当接口变量内部的两个指针(itab, data) 都为nil时，接口才等于nil。
+
+在函数返回 error 时，可能会出现常见的错误
+```
+type TestError struct{}
+
+func test() error {
+    var err *TestError
+
+    return err      // 这里的err并不等于nil，因为它是有类型信息的，正确的做法是直接返回nil
+}
+```
+
+### 7.3 类型转换
+
+类型推断可以将接口变量还原为原始类型，或用来判断是否实现了某个更具体的接口类型。
+```
+type data int
+
+func (d data) String() string {
+    return fmt.Sprintf("data: %d", d)
+}
+
+func main1() {
+    var d data = 15
+    var x interface{} = d
+
+    if n, ok := x.(fmt.Stringer); ok { // 转换为更具体的接口类型
+        fmt.Println(n)
+    }
+
+    if d2, ok := x.(data); ok { // 转换会原始类型
+        fmt.Println(d2)
+    }
+}
+```
+
+可以使用 switch 语句在多种类型间做出推断匹配，值的注意的是，此时不支持 fallthrought。
