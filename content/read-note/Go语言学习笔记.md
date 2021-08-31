@@ -816,3 +816,129 @@ reflect.TypeOf(map[string]int{}).Elem() // int
 ```
 t.FieldByIndex([]int{0, 1})
 ```
+
+### 10.2 值
+
+Type 获取类型信息，Value 专注于对象实例数据读写。
+
+接口变量会复制对象，是 unaddressable 的，若想修改目标对象必须使用指针。使用指针也要通过 Elem 来获取目标对象，因为被接口存储的指针本身也是不能寻址的。
+```
+a := 100
+va, vp := reflect.ValueOf(a), reflect.ValueOf(&a).Elem()
+
+fmt.Println(va.CanAddr(), va.CanSet()) // false, false
+fmt.Println(vp.CanAddr(), vp.CanSet()) // true, true
+```
+不能对非导出字段直接进行设置操作，无论是当前包还是外包。
+
+接口有两种nil状态，可以通过 IsNil 判断是否为nil
+```
+	var a interface{} = nil
+	var b interface{} = (*int)(nil)
+
+	fmt.Println(a == nil)                             // true
+	fmt.Println(b == nil, reflect.ValueOf(b).IsNil()) // false true
+```
+
+### 10.3 方法
+
+可以通过 Call 来动态调用方法
+
+可以通过 CallSlice 来动态调用变参方法（也可以通过 Call）
+
+### 10.5 性能
+
+如果对性能要求很高，需要谨慎使用反射。
+
+
+## 第11章 测试
+
+### 11.1 单元测试
+
+测试代码须放在当前包，以“_test.go”结尾
+
+测试函数以 Test 名称为前缀
+
+测试命令会忽略以 “_” 或 “.” 开头的测试文件
+
+标准库 testing 提供了专用类型T来控制测试结果和行为
+* Fail: 失败，继续执行当前测试函数
+* FailNow: 失败，离职终止执行当前测试函数
+* SkipNow: 跳过，停止执行当前测试函数
+* Log: 输出错误信息，仅失败或 -v 时输出
+* Parallel: 与有同样设置的测试函数并行执行
+* Error: Fail + Log
+* Fatal: FailNow + Log
+
+常用测试参数
+* -args: 命令行参数
+* -v: 输出详细信息
+* -parallel: 并发执行
+* -run: 指定测试函数，正则表达式
+* -timeout: 全部测试累计时间超时将引发panic，默认值为10ms
+* -count: 重复测试次数，默认值为1
+
+### 11.2 性能测试
+
+性能测试函数以 Benchmark 为名称前缀，同样保存在“_test.go”文件里
+
+默认不会执行性能测试，需要机上 `-bench` 参数
+
+timer 可以调整计时器
+
+想要关注内存分配情况，使用 `-benchmem` 参数
+
+## 第12章 工具链
+
+### 12.2 工具
+
+go build
+* -o: 可执行文件名，默认与目录同名
+* -a: 强制重新编译所有包(含标准库)
+* -p: 并行编译所使用的cpu数量
+* -v: 显示待编译包的名字
+* -n: 仅显示编译命令，但不执行
+* -x: 显示正在执行的编译命令
+* -race: 启动数据竞争检查
+* -gcflags: 编译器参数
+* -ldflags: 链接器参数
+
+gcflags
+* -B: 禁用越界检查
+* -N: 禁用优化
+* -l: 禁用内联
+* -u: 禁用unsafe
+* -S: 输出汇编代码
+* -m: 输出优化信息
+
+ldflags
+* -s: 禁用符号表
+* -w: 禁用DRAWF调试信息
+* -X: 设置字符串全局变量值
+* -H: 设置可执行文件格式
+
+更多参数: `go gool compile -h`、`go tool link -h`
+
+go install 将编译结果安装到 bin、pkg 目录
+
+go get 将第三方包下载到 GOPATH 列表的第一个工作空间，默认不会检查更新
+* -d: 仅下载，不安装
+* -u: 更新包，包括其依赖项
+* -f: 和 -u 配合，强制更新，不检查是否过期
+* -t: 下载测试代码所需要的依赖包
+* -insecure: 使用HTTP等非安全协议
+* -v: 输出详细信息
+* -x: 显示正在执行的命令
+
+go clean 清理工作目录，删除编译和安装遗留的目标文件。
+* -i: 清理 go install 安装的文件
+* -r: 递归清理所有依赖包
+* -n: 仅显示清理命令，不执行
+* -x: 显示正在执行的清理命令
+
+### 12.3 编译
+
+如果习惯使用 GDB 调试器，建议编译时添加 -gcflags "-N -l" 参数阻止内联和优化
+
+交叉编译，在mac上编译linux平台：`GOOS=linux go build`
+
