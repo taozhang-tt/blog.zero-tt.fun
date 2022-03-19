@@ -16,7 +16,7 @@ tags:
 
 ## 2. singleflight 使用 demo
 
-```
+```go
 package main
 
 import (
@@ -101,7 +101,7 @@ func (c *CacheClient) query(key string) (string, bool) {
 * 执行代码块 1 时可以带上 `c.group.Forget(key)` 试试看
 
 ## 3. singleflight 源码探究
-```
+```go
 type call struct {
 	wg sync.WaitGroup
 	val interface{}     //保存函数执行的结果
@@ -163,7 +163,7 @@ func (g *Group) Forget(key string) {
 
 ## 4. 我在项目中的应用
 
-```
+```go
 package xcache
 
 import (

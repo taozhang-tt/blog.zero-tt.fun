@@ -16,7 +16,7 @@ tags:
 你作为公司的顶梁柱，要编写一个服务器组件
 
 ## 阶段一：上手就撸版本
-```
+```go
 type Server struct {
   listener net.Listener
 }
@@ -51,7 +51,7 @@ func NewServer(addr string) (*Server, error) {
 * 我要我还要......
 
 那就增加点参数，整个可配置版吧
-```
+```go
 // NewServer returns a new Server listening on addr.
 // clientTimeout defines the maximum length of an idle
 // connection, or forever if not provided.
@@ -73,7 +73,7 @@ func NewServer(addr string, clientTimeout time.Duration,
 * 最大连接数我不想管，我想使用默认值，那我传 0 可以吗？传 0 不会最大连接数就是 0 了吧！oh my  god！
 
 ## 阶段三：巨多函数版本
-```
+```go
 // NewServer returns a Server listening on addr.
 NewServer(addr string) (*Server, error)
 
@@ -95,7 +95,7 @@ NewTLSServerWithTimeout(addr string, cert *tls.Cert, timeout time.Duration) (*Se
 * 参数越多，函数越多，越来越难维护
 
 ## 阶段四：配置结构版本
-```
+```go
 // Config structure is used to configure the Server.
 type Config struct {
   // Timeout sets the amount of time before closing
@@ -119,7 +119,7 @@ func NewServer(addr string, config Config) (*Server, error)
 * 所有选项都不想配置时，仍需要构造一个空的 Config 作为参数
 
 ## 阶段五：指针优化版本
-```
+```go
 func NewServer(addr string, config *Config) (*Server, error) {...}
 
 func main() {
@@ -140,7 +140,7 @@ func main() {
 * 疑惑2: 使用 config 构建好了 server，再修改 config 会发生什么？
 
 ## 阶段六：可变配置版本
-```
+```go
 func NewServer(addr string, config ...Config) (*Server, error) {...}
 
 func main() {
@@ -161,7 +161,7 @@ func main() {
 * 原则上我们期望最多一个 config，但是函数的定义是可变的，可传递多个 config，更糟糕的是，这些 config 的值可能是相互矛盾的
 
 ## 阶段七：可变函数版本
-```
+```go
 func NewServer(addr string, options ...func(*Server)) (*Server, error) {...}
 
 func main() {

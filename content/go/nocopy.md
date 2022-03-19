@@ -12,7 +12,7 @@ tags:
 <!--more-->
 
 话不多说，直接上码：
-```
+```go
 // noCopy may be embedded into structs which must not be copied
 // after the first use.
 
@@ -26,7 +26,7 @@ func (*noCopy) Unlock() {}
 ```
 
 意思就是说，如果你想禁止一个 struct 被拷贝，只需把 noCopy 嵌入即可，go vet 命令会做禁止拷贝的检查。
-```
+```go
 package main
 
 func main() {
@@ -47,7 +47,7 @@ type TestNoCopy struct {
 func Test(t TestNoCopy) {}
 ```
 将上述代码保存为 main.go 文件，然后执行 `go vet main.go` 命令，会报错：
-```
+```go
 ./main.go:6:7: call of Test copies lock value: command-line-arguments.TestNoCopy
 ./main.go:19:13: Test passes lock by value: command-line-arguments.TestNoCopy
 ```

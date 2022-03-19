@@ -24,7 +24,7 @@ tags:
 [源码下载地址](https://codeload.github.com/golang/go/zip/refs/tags/go-weekly.2009-11-06)
 
 部分代码片段如下：
-```
+```go
 package sync
 
 import "runtime"
@@ -82,7 +82,7 @@ func (m *Mutex) Unlock() {
 给新人机会的意思是，当新来的 goroutine 请求锁时，和被唤醒的 goroutine 一起抢夺锁，而不是放到 waiter 队列的最后面等待调度。
 
 Mutex 结构体：
-```
+```go
 type Mutex struct {
 	state int32
 	sema  uint32
@@ -97,7 +97,7 @@ type Mutex struct {
 * 剩余位数：用于记录等待获取锁的 goroutine 数量
 
 一些常量的定义：
-```
+```go
 const (
 	mutexLocked = 1 << iota // 二进制： 0001
 	mutexWoken              // 二进制： 0010
@@ -106,7 +106,7 @@ const (
 ```
 
 上锁：
-```
+```go
 func (m *Mutex) Lock() {
 	// 幸运 case，直接获取到锁
 	if atomic.CompareAndSwapInt32(&m.state, 0, mutexLocked) {
@@ -140,7 +140,7 @@ func (m *Mutex) Lock() {
 ![20210422163949](http://pic.zero-tt.fun/note/20210422163949.png)
 
 解锁：
-```
+```go
 func (m *Mutex) Unlock() {
 	// Fast path: drop lock bit.
 	// 去除锁的标识位，这一步执行结束，如果有其它的 goroutine 来抢夺锁，是可以成功获取到锁的
@@ -177,7 +177,7 @@ func (m *Mutex) Unlock() {
 对于新来的和被唤醒的，它们的获得锁的机会是差不多的，这次的优化是多给它们一些机会，目的是减少阻塞、唤醒的次数，具体的做法看代码
 
 上锁：
-```
+```go
 func (m *Mutex) Lock() {
 	if atomic.CompareAndSwapInt32(&m.state, 0, mutexLocked) {
 		if raceenabled {
@@ -243,7 +243,7 @@ func (m *Mutex) Lock() {
 ![20210422192730](http://pic.zero-tt.fun/note/20210422192730.png)
 
 常量的定义：
-```
+```go
 const (
 	mutexLocked = 1 << iota     // 1 二进制：0001
 	mutexWoken                  // 2 二进制：0010
@@ -253,7 +253,7 @@ const (
 ```
 
 上锁操作：
-```
+```go
 func (m *Mutex) Lock() {
 	// 幸运 case：锁是初始化状态, 直接上锁返回
 	if atomic.CompareAndSwapInt32(&m.state, 0, mutexLocked) {
@@ -348,7 +348,7 @@ func (m *Mutex) lockSlow() {
 ```
 
 释放锁操作：
-```
+```go
 func (m *Mutex) Unlock() {
 	// 这里已经释放了锁，但如果是饥饿模式，那新来的 goroutine 也不会抢夺锁，这是和上个版本不同的地方
 	new := atomic.AddInt32(&m.state, -mutexLocked)

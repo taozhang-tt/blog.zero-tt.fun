@@ -22,7 +22,7 @@ CAS 的全称是 Compare And Swap.
 
 
 听起来还是很绕？贴个 golang 源码片段(还带汇编的哦)
-```
+```go
 // func cas(val *int32, old, new int32) bool
 // Atomically:
 //	if *val == old {
@@ -44,7 +44,7 @@ ok:
 	RET
 ```
 再贴一段早期的 Mutex 源码片段 [源码地址](https://codeload.github.com/golang/go/zip/refs/tags/weekly.2009-11-06)
-```
+```go
 func xadd(val *uint32, delta int32) (new uint32) {
 	for {
 		v := *val;
@@ -58,7 +58,7 @@ func xadd(val *uint32, delta int32) (new uint32) {
 ```
 
 举个栗子巩固一下
-```
+```go
 package main
 
 import (

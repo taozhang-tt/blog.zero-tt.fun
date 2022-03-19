@@ -13,7 +13,7 @@ tags:
 
 > 文中例子参考：https://www.flysnow.org/2017/05/12/go-in-action-go-context.html
 ## 1. 使用 chan + select 控制 goroutine 停止
-```
+```go
 package main
 
 import (
@@ -71,7 +71,7 @@ func main() {
 
 context 是 GO 语言为我们提供的上下文，可以用来跟踪 goroutine；其实质还是通过通道传递停止讯号，下面是一个简单的例子：
 
-```
+```go
 //使用 context 控制 goroutine 停止
 package main
 
@@ -104,7 +104,7 @@ func main() {
 }
 ```
 对比 1 中的例子，只是把原来的 chan `stop` 换成了 `context`，那 `context` 是如何发送结束指令的呢？关键就在于 `cancel()`，查看这个取消函数的代码，其中有这么一段：
-```
+```go
 if c.done == nil {
 	c.done = closedchan
 } else {
@@ -114,7 +114,7 @@ if c.done == nil {
 其实这里我是有一个疑问的，结合 1 中的例子，应当是执行了 `close(c.done)`，才算是发送了结束指令，那如果 `if c.done == nil` 成立，那不就没有结束指令了？如果你调试代码会发现，当调用 `cancel()`时，`c.done` 一定是不为 nil 的，那必定是哪里对它进行了初始化。
 
 `ctx, cancel := context.WithCancel(context.Background())` 查看这里的 WithCancel 方法源码：
-```
+```go
 func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
 	c := newCancelCtx(parent)
 	propagateCancel(parent, &c)
@@ -122,13 +122,13 @@ func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
 }
 ```
 `c := newCancelCtx(parent)` 查看 `newCancelCtx` 方法源码：
-```
+```go
 func newCancelCtx(parent Context) cancelCtx {
 	return cancelCtx{Context: parent}
 }
 ```
 返回了一个 `cancelCtx` 对象，再查看 `cancelCtx` 如何实现的 `Context` 接口里的方法，重点关注 `Done` 方法：
-```
+```go
 func (c *cancelCtx) Done() <-chan struct{} {
 	c.mu.Lock()
 	if c.done == nil {
@@ -142,7 +142,7 @@ func (c *cancelCtx) Done() <-chan struct{} {
 我们发现这里对 `c.done` 做了初始化，所以当我们执行 `case <-ctx.Done()` 时，就进行了这一初始化操作，看到这里也就解决了我上述的疑惑；
 
 ## 3. 使用 context 控制多个 goroutine 停止
-```
+```go
 //使用 context 控制多个 goroutine 的停止
 package main
 
@@ -183,7 +183,7 @@ func watch(ctx context.Context, name string) {
 ## 4. 使用 context 控制嵌套的 goroutine 停止
 `context` 是有层级或者说是父子关系的，当父 `context` 取消的时候，它的所有孩子、孩子的孩子也都会被一并取消，下面来看一个例子：
 
-```
+```go
 //使用 context 控制嵌套的 goroutine 停止
 package main
 
@@ -233,7 +233,7 @@ func childWatch(ctx context.Context, name string) {
 }
 ```
 我们先是在外层创建了一个 context，且该 context 的父亲是一个空的 context，我们在 `parentWatch` 方法中以外层 context 为父亲，创建了一个孩子 context，并将该孩子 context 放入了父 context 的 children 切片中，当我们调用父 context 的 `cancel` 方法时，在关闭通道以后，还会一个一个去调用孩子 context 的 cancel 方法，代码片段如下：
-```
+```go
 if c.done == nil {
 	c.done = closedchan
 } else {

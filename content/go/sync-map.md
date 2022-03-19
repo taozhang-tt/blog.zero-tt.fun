@@ -44,7 +44,7 @@ tags:
 
 ### 2. read 为什么可以更新 key 对应的 value？dirty 中会同步更新吗？
 因为 read 和 dirty 之间的关系是，dirty 会升级成为 read，read 的元素会拷贝给 dirty，两者最底层的数据都是 `map[interface{}]*entry` 注意那个 entry 是一个指针，指针指向的结构体是
-```
+```go
 type entry struct {
     p unsafe.Pointer
 }
@@ -74,50 +74,50 @@ map 的 `LoadOrStore()` 操作中，和 `Store()` 方法类似。
 map 的删除操作是一个延迟删除，下面我们来结合代码说一下 expunged 是如何发挥作用的。
 
 （1）假设 map 当前的状态如下：
-```
+```go
 read  -> {1: entry{p: p1}}, {2: entry{p: p2}}
 dirty -> {1: entry{p: p1}}, {2: entry{p: p2}}
 ```
 （2）删除 key = 1，最终会调用 e.delete() 操作，修改 e.p 的值 为 nil，状态为：
-```
+```go
 read  -> {1: entry{p: nil}}, {2: entry{p: p2}}
 dirty -> {1: entry{p: nil}}, {2: entry{p: p2}}
 ```
 read 和 dirty 中的 entry 是同一个指针，所以它们同步更新
 
 （3）发生了新增操作，新增了 key = 3，状态为：
-```
+```go
 read  -> {1: entry{p: nil}}, {2: entry{p: p2}}
 dirty -> {1: entry{p: nil}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 ```
 因为 read 和 dirty 中都不存在 key=3，所以在 dirty 新增映射，read 虽然读写安全，这个写也只是特指更新 entry 罢了。另外，如果放到 read 执行，dirty 升级为 read 操作的时候，会丢数据。
 
 （4）此时多次访问 key = 3，会触发 dirty 升级为 read，状态为：
-```
+```go
 read  -> {1: entry{p: nil}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 dirty -> nil
 ```
 上面的结论虽然说真实的删除操作发生在 dirty 升级成为 read 时，但不是指这一次升级。
 
 （5）这个时候如果新增 key = 1，是一个 fast path，会直接调用 `e.tryStore`，在 read 里更新，不会有问题的，因为 dirty 是空的，不用担心丢数据，这种情况下 dirty 不可能升级成 read。此时状态为：
-```
+```go
 read  -> {1: entry{p: p1}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 dirty -> nil
 ```
 （6）假设上一步的操作没有进行，状态还是
-```
+```go
 read  -> {1: entry{p: nil}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 dirty -> nil
 ```
 此时如果新增 key = 4，因为 read 和 dirty 中都不存在，会走到 `m.dirtyLocked()` 里面，此时 dirty 为 nil，会触发 read 到 dirty 的拷贝，拷贝的过程中会通过 `e.tryExpungeLocked()` 判断 e.p 是否为 nil，如果为 nil 则不拷贝，只是添加 expunged 标记，所以现在的状态是：
-```
+```go
 read  -> {1: entry{p: expunged}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 dirty -> {2: entry{p: p2}}, {3: entry{p: p3}}
 ```
 key = 1 的节点在 dirty 中已经不存在了，下次 dirty 升级成 read 时，会彻底被 GC 回收。真正的删除操作这时候发生。
 
 （7）此时如果我们再次新增 key = 1，read 里面虽然有 key = 1 对应的 e，但是也不会直接更新了，更新了就乱套了，read 永远不能包含 dirty 不存在的元素（dirty 刚升级完成时除外）！所以 `e.tryStore` 里面，通过检查 `p==expunged` 直接返回 false 了。它最终会走到
-```
+```go
 if e, ok := read.m[key]; ok {      // read 中存在要更新的 key
     if e.unexpungeLocked() {
         m.dirty[key] = e
@@ -126,13 +126,13 @@ if e, ok := read.m[key]; ok {      // read 中存在要更新的 key
 }
 ```
 这个分之，去除 `unexpunged` 标记，dirty 中也存入同一个 entry，entry 存入 value，所以最终状态是
-```
+```go
 read  -> {1: entry{p: p11}}, {2: entry{p: p2}}, {3: entry{p: p3}}
 dirty -> {2: entry{p: p2}}, {3: entry{p: p3}}, {1: entry{p: p11}}
 ```
 
 ## 源码注释
-```
+```go
 type Map struct {
     mu     Mutex
     read   atomic.Value // readOnly

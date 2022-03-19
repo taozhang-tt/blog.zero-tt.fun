@@ -6,13 +6,13 @@ DisqusShortname = "wuchang-blog"
 
 [Author] # Used in authorbox
   name = "TT"
-  bio = "John Doe's true identity is unknown. Maybe he is a successful blogger or writer. Nobody knows it."
+  bio = "Maybe he is a successful blogger or writer. Nobody knows it."
   avatar = "img/tt.jpg"
 
 [Params]
   subtitle = "" # Deprecated in favor of .Site.Params.logo.subtitle
-  description = "John Doe's Personal blog about everything" # Site description. Used in meta description
-  copyright = "John Doe" # Footer copyright holder, otherwise will use site title
+  description = "Personal blog about everything" # Site description. Used in meta description
+  copyright = "TT" # Footer copyright holder, otherwise will use site title
   opengraph = true # Enable OpenGraph if true
   schema = true # Enable Schema
   twitter_cards = true # Enable Twitter Cards if true
@@ -22,7 +22,7 @@ DisqusShortname = "wuchang-blog"
   pager = true # Show pager navigation (prev/next links) at the bottom of pages if true
   post_meta = ["author", "date", "categories", "translations"] # Order of post meta information
   content_meta = ["author", "date", "categories", "view"] # Order of content meta information
-  mainSections = ["post", "blog", "news", "db", "go", "read-note"] # Specify section pages to show on home page and the "Recent articles" widget
+  mainSections = ["post", "blog", "news", "db", "go", "leetcode", "other", "read-note"] # Specify section pages to show on home page and the "Recent articles" widget
   dateformat = "2006-01-02" # Change the format of dates
   mathjax = true # Enable MathJax
   mathjaxPath = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js" # Specify MathJax path
@@ -66,13 +66,24 @@ DisqusShortname = "wuchang-blog"
 #   instagram = "username"
 #   linkedin = "username"
 #   telegram = "username"
-#   github = "username"
+  github = "taozhang.tt@gmail.com"
 #   gitlab = "username"
 #   bitbucket = "username"
   email = "taozhang.tt@gmail.com"
-
 [markup]
   [markup.tableOfContents]
     endLevel = 2
     ordered = false
     startLevel = 1
+    anchorLineNos = false
+    codeFences = true
+    guessSyntax = false
+    hl_Lines = ''
+    lineAnchors = ''
+    lineNoStart = 1
+    lineNos = false
+    lineNumbersInTable = true
+    noClasses = true
+    noHl = false
+    style = 'monokai'
+    tabWidth = 4 

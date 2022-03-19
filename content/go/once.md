@@ -15,7 +15,7 @@ Once 常常用来初始化单例资源，或者并发访问只需初始化一次
 ## 如何初始化单例
 
 ### 1. 定义 package 级别的变量
-```
+```go
 package abc
 
 import time
@@ -24,7 +24,7 @@ var startTime = time.Now()
 ```
 
 ### 2. 在 init() 函数中初始化
-```
+```go
 package abc
 
 var startTime time.Time
@@ -35,7 +35,7 @@ func init() {
 ```
 
 ### 3. 在 main 函数中执行初始化逻辑
-```
+```go
 package abc
 
 var startTime time.Tim
@@ -52,7 +52,7 @@ func main() {
 以上三种方法都是线程安全的，后两种方法甚至可以提供定制化的初始化服务，但是它们有一个共同的缺点：不能实现延迟初始化。
 
 ## 延迟初始化
-```
+```go
 
 
 package main
@@ -93,7 +93,7 @@ func main() {
 
 ## 使用 Once 延迟初始化单例对象
 使用 Once 重写延迟初始化的例子
-```
+```go
 package main
 
 import (
@@ -123,7 +123,7 @@ func main() {
 
 ## Once 的实现
 Once 结构体定义：
-```
+```go
 type Once struct {
     done uint32 // action 是否已经执行过
     m    Mutex  // 保护 done 字段
@@ -131,7 +131,7 @@ type Once struct {
 ```
 
 Do 方法：
-```
+```go
 func (o *Once) Do(f func()) {
     if atomic.LoadUint32(&o.done) == 0 {    // f 还未执行过
         o.doSlow(f) // 执行 f
@@ -151,7 +151,7 @@ func (o *Once) doSlow(f func()) {
 ## Once 易错场景
 
 ### 1. f 中再次调用 Do 方法导致死锁
-```
+```go
 once.Do(func(){
     once.Do(f)
 })
@@ -160,7 +160,7 @@ once.Do(func(){
 
 ### 2. 未成功执行 f，以后也不会再次执行 f
 上述的 `getConn` 方法中，
-```
+```go
 once.Do(func() {
     conn, _ = net.DialTimeout("tcp", "baidu.com:80", 10*time.Second)
 })
@@ -169,7 +169,7 @@ once.Do(func() {
 
 ## Once 封装：解决未正确初始化问题
 我们对 Once 做一个封装，在初始化失败的情况下，下次调用 Do 方法时，还能进行初始化尝试
-```
+```go
 
 // 一个功能更加强大的Once
 type Once struct {
@@ -201,7 +201,7 @@ func (o *Once) slowDo(f func() error) error {
 
 ## 封装 Done 方法：获取初始化状态
 目前的 Once 实现可以保证你调用任意次数的 `once.Do` 方法，它只会执行这个方法一次。但是，有时候我们需要打一个标记。如果初始化后我们就去执行其它的操作，标准库的 Once 并不会告诉你是否初始化完成了，只是让你放心大胆地去执行 Do 方法，所以，你还需要自己去检查是否初始化过了，我们在上述封装的基础上添加一个 Done 方法，判断初始化是否完成。
-```
+```go
 func (o *Once) Done() bool {
     return atomic.LoadUint32(&o.done) == 1
 }

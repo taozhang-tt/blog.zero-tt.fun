@@ -25,7 +25,7 @@ tags:
 
 所以说我们需要一个prev来记录要翻转的节点的前一个节点，这也是做链表题目的一个技巧，添加虚拟头指针，代码如下
 
-```
+```go
 // 常规解法，直接翻转
 func reverseList(head *ListNode) *ListNode {
 	var prev *ListNode
@@ -40,7 +40,7 @@ func reverseList(head *ListNode) *ListNode {
 ```
 
 使用golang的语法糖，可以简写如下
-```
+```go
 func reverseList(head *ListNode) *ListNode {
 	var prev *ListNode
 	for head != nil {
@@ -51,7 +51,7 @@ func reverseList(head *ListNode) *ListNode {
 ```
 
 抽象一点的解法，使用递归
-```
+```go
 func reverseList(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil { // 递归出口，链表为空，或是只有一个节点，直接返回
 		return head
@@ -77,7 +77,7 @@ func reverseList(head *ListNode) *ListNode {
 有了206题目做基础，现在我们想要2个一组翻转链表，首先需要知道要翻转的两个节点 a -> b，还要知道这两个节点的前一个节点 prev，翻转完成后的顺序是 prev -> b -> a
 
 直接翻转
-```
+```go
 func swapPairs(head *ListNode) *ListNode {
 	virtual := &ListNode{Next: head} // 添加一个虚拟头结点
 	prev := virtual                  // prev 用于记录要翻转的两个节点的前一个节点 prev -> a -> b
@@ -95,7 +95,7 @@ func swapPairs(head *ListNode) *ListNode {
 ```
 
 利用golang的语法糖简写
-```
+```go
 func swapPairs(head *ListNode) *ListNode {
 	virtual := &ListNode{Next: head}
 	prev := virtual
@@ -108,7 +108,7 @@ func swapPairs(head *ListNode) *ListNode {
 ```
 
 抽象一点，利用递归
-```
+```go
 func swapPairs(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil { // 递归出口
 		return head
@@ -121,7 +121,7 @@ func swapPairs(head *ListNode) *ListNode {
 ```
 
 简写
-```
+```go
 func swapPairs(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil { // 递归出口
 		return head
@@ -139,7 +139,7 @@ func swapPairs(head *ListNode) *ListNode {
 由前面的题目做基础，我们知道翻转链表应该怎么写，那翻转链表的前k(k<=节点数)个节点怎么写？
 
 翻转链表的前k个节点
-```
+```go
 func reverseK(head *ListNode, k int) *ListNode {
 	root := head // 保存一下第一个节点，翻转过后它将是翻转部分的最后一个节点
 	var prev *ListNode
@@ -153,7 +153,7 @@ func reverseK(head *ListNode, k int) *ListNode {
 ```
 
 翻转链表的第left到第right部分节点，索引从1开始计数，不是0
-```
+```go
 func reverseBetween(head *ListNode, left int, right int) *ListNode {
 	virtual := &ListNode{Next: head} // 添加一个虚拟头结点，方便处理 left 为 1 的情况
 	prev := virtual                  // 记录要翻转部分的前一个节点
@@ -172,7 +172,7 @@ func reverseBetween(head *ListNode, left int, right int) *ListNode {
 大致思路：遍历k个节点，节点数足够，那么将这k个节点与后面的节点断开，前k个节点调用 `reverseList()` 函数翻转，后面的部分递归调用k个一组翻转的函数进行翻转
 
 准备工作，怎样把链表按k个一组切分?
-```
+```go
 func cutK(head *ListNode, k int) []*ListNode {
 	ret := make([]*ListNode, 0)
 	if head == nil {
@@ -194,7 +194,7 @@ func cutK(head *ListNode, k int) []*ListNode {
 ```
 
 k个一组翻转
-```
+```go
 func reverseKGroup(head *ListNode, k int) *ListNode {
 	tail := &ListNode{Next: head} // 添加一个指针，和head组成一对儿，标记要翻转的k个节点组成的链表
 	for i := 0; i < k; i++ {

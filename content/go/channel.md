@@ -16,7 +16,7 @@ tags:
 2. [极客时间专栏-Go并发编程实战课](https://time.geekbang.org/column/article/304188)
 
 ## channel 的数据结构
-```
+```go
 type hchan struct {
 	qcount   uint           // 循环队列中元素的数量，就是还没被取走的
 	dataqsiz uint           // 循环队列的大小
@@ -36,7 +36,7 @@ type hchan struct {
 
 使用 `make` 创建 channel 时，编译后对应 `runtime.makechan` 和 `runtime.makechan64`
 源码位置: `runtime/chan.go`
-```
+```go
 // makechan 创建channel
 // chan 的类型，chan 的缓冲区大小
 func makechan(t *chantype, size int) *hchan {
@@ -96,7 +96,7 @@ func makechan(t *chantype, size int) *hchan {
 发送数据的操作，经过编译后对应的是 `runtime.chansend1`，最终调用的是`runtime.chansend2`
 源码位置: `runtime/chan.go`
 
-```
+```go
 func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 	// 第一部分
 	// 如果 chan 是 nil 的话，就把调用者 goroutine park（阻塞休眠），调用者就永远被阻塞住了
@@ -203,7 +203,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 
 接收数据的操作，经过编译后对应的是 `runtime.chanrecv1` 和 `runtime.chanrecv2`，分别是一个返回和两个返回，最终调用的都是 `chanrecv`
 
-```
+```go
 func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
 	if debugChan {
 		print("chanrecv: chan=", c, "\n")
@@ -328,7 +328,7 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
 
 关闭 channle 的操作，编译后对应的是 `runtime.closechan`
 
-```
+```go
 func closechan(c *hchan) {
 	// 关闭一个 nil chan，panic
 	if c == nil {

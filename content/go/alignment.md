@@ -35,7 +35,7 @@ tags:
 
 ### 对齐保证
 可以通过 `unsafe` 包的 `Alignof()` 方法查看对齐保证，示例如下：
-```
+```go
 var i8 int8 = 1
 align := unsafe.Alignof(i8)
 
@@ -67,7 +67,7 @@ align = unsafe.Alignof(i32)
 * 结构体占用内存大小，是对齐倍数的整数倍
 
 举例1：
-```
+```go
 type demo1 struct {
     a int8  // align: 1, offset: 0, start: 0, end: 0
     b int16 // align: 2, offset: 2, start: 2, end: 3
@@ -77,7 +77,7 @@ type demo1 struct {
 每个字段在内存中的起始位置（相对位置，参考点是结构体地址的开始位置）都以注释形式标注清楚了，3 个字段实际占用 7 字节，内存对齐后需要 8 字节。
 
 举例2:
-```
+```go
 type demo2 struct {
     a int8  // align: 1, offset: 0, start: 0, end: 0
     c int32 // align: 4, offset: 4, start: 4, end: 7

@@ -16,7 +16,7 @@ tags:
 ## 1. 使用 Demo
 
 ### 1.1 每秒钟执行一次
-```
+```go
 package main
 
 import (
@@ -41,7 +41,7 @@ cron 表达式格式可以自行百度，这里不再赘述。
 需要强调的是，cron 默认支持到分钟级别，如果需要支持到秒级别，在初始化 cron 时，记得 `cron.WithSeconds()` 参数。
 
 ### 1.2 每分钟执行一次
-```
+```go
 // 每分钟执行一次
 job.AddFunc("0 * * * * *", func() {
     fmt.Printf("minutely: %v\n", time.Now())
@@ -49,7 +49,7 @@ job.AddFunc("0 * * * * *", func() {
 ```
 
 ### 1.3 每小时执行一次
-```
+```go
 // 每小时执行一次
 job.AddFunc("0 0 * * * *", func() {
     fmt.Printf("hourly: %v\n", time.Now())
@@ -65,7 +65,7 @@ cron 提供的解析器，可以识别 `@hourly` 这种写法，类似的还有 
 cron 表达式无法直接实现，另辟蹊径。
 
 #### 1.4.1 @every 写法
-```
+```go
 // 固定时间间隔执行
 job.AddFunc("@every 60s", func() {
     fmt.Printf("every: %v\n", time.Now())
@@ -74,7 +74,7 @@ job.AddFunc("@every 60s", func() {
 `@every` 也是解析器提供的功能，`60s` 这个写法，其实就是一个时间区间，类似的还有 `1h`，`1h30m` 等，具体的格式可以通过 [time.ParseDuration](https://golang.org/pkg/time/#ParseDuration) 获取。
 
 #### 1.4.2 Schedule 写法
-```
+```go
 job.Schedule(cron.ConstantDelaySchedule{Delay: time.Minute}, cron.FuncJob(func() {
     fmt.Printf("every: %v\n", time.Now())
 }))
@@ -86,7 +86,7 @@ job.Schedule(cron.ConstantDelaySchedule{Delay: time.Minute}, cron.FuncJob(func()
 ## 2. 源码分析
 
 ### 2.1 Schedule
-```
+```go
 // 描述一个 job 如何循环执行
 type Schedule interface {
     // Next returns the next activation time, later than the given time.
@@ -104,7 +104,7 @@ ConstantDelaySchedule 也是一样的，我们只需了解 `func (schedule Const
 
 
 ### 2.2 Job
-```
+```go
 type Job interface {
     Run()
 }
@@ -112,7 +112,7 @@ type Job interface {
 接口类型，定义定时任务，cron 调度一个 Job，就去执行 Job 的 Run() 方法。
 
 #### 2.2.1 实现：FuncJob
-```
+```go
 type FuncJob func()
 
 func (f FuncJob) Run() { f() }
@@ -121,12 +121,12 @@ FuncJob 实际就是一个 `func()` 类型，实现了 `Run()` 方法。
 
 ### 2.3 修饰器加工 Job
 修饰器可以有多种，先定义一下修饰器的类型，关于修饰器的说明，可以看我另一篇文章[《Go 修饰器》](http://zero-tt.fun/decorator)
-```
+```go
 type JobWrapper func(Job) Job
 ```
 
 #### 2.3.1 修饰器一：Job 上次的执行还没结束，这次就跳过吧
-```
+```go
 func SkipIfStillRunning(logger Logger) JobWrapper {
     var ch = make(chan struct{}, 1)
     ch <- struct{}{}
@@ -146,21 +146,21 @@ func SkipIfStillRunning(logger Logger) JobWrapper {
 简单理解为该装饰器给 Job 加了一个锁，就是那个大小为 1 的 chan，获取到锁这个 Job 才能执行，获取不到直接 logger.Info()
 
 使用示例：
-```
+```go
 job.AddJob("@every 1s", cron.SkipIfStillRunning(cron.DefaultLogger)(cron.FuncJob(func() {
     time.Sleep(time.Second * 3)
     fmt.Printf("SkipIfStillRunning: %v", time.Now())
 })))
 ```
 当然，你也可以在创建 cron 时就使用 chain，这将会对所有 Job 起作用
-```
+```go
 jobs := cron.New(
     cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
 )
 ```
 
 #### 2.3.2 修饰器二：Job 上次的执行还没结束，那这次先阻塞住，等上次结束了再执行
-```
+```go
 func DelayIfStillRunning(logger Logger) JobWrapper {
     return func(j Job) Job {
         var mu sync.Mutex
@@ -181,7 +181,7 @@ func DelayIfStillRunning(logger Logger) JobWrapper {
 
 #### 2.3.3 修饰器的使用
 由于修饰器可能存在多个，多个修饰器用在一个 Job 上，像套娃一样，一层又一层。
-```
+```go
 // 所有修饰器的载体
 type Chain struct {
     wrappers []JobWrapper
@@ -204,7 +204,7 @@ func (c Chain) Then(j Job) Job {
 ```
 
 ### 2.4 Entry 定义
-```
+```go
 type Entry struct {
     ID EntryID          // job id，可以通过该 id 来删除 job
     Schedule Schedule   // 用于计算 job 下次的执行时间
@@ -217,7 +217,7 @@ type Entry struct {
 结构体字段，上文已经解释清楚了
 
 ### 2.5 Cron 定义
-```
+```go
 type Cron struct {
     entries   []*Entry          // Job 集合
     chain     Chain             // 装饰器链
@@ -236,7 +236,7 @@ type Cron struct {
 ```
 
 #### 2.5.1 run 方法
-```
+```go
 func (c *Cron) run() {
     c.logger.Info("start")
 

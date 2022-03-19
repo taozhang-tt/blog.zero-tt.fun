@@ -12,7 +12,7 @@ tags:
 
 ## 问题发现
 今天阅读 golang 源码时，看到一个函数 `runtime_canSpin` 大概意思是判断能否进行自旋，想查看它的实现，idea 跳转进去以后在 sync/runtime.go 文件里只看到了函数的定义 
-```
+```go
 // Active spinning runtime support.
 // runtime_canSpin reports whether spinning makes sense at the moment.
 func runtime_canSpin(i int) bool
@@ -21,7 +21,7 @@ func runtime_canSpin(i int) bool
 
 ## 找答案
 clone 了 golang 源码，全局搜索 `runtime_canSpin`，在 runtime/proc.go 文件找到了如下的代码块：
-```
+```go
 // Active spinning for sync.Mutex.
 //go:linkname sync_runtime_canSpin sync.runtime_canSpin
 //go:nosplit
