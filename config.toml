@@ -6,7 +6,7 @@ DisqusShortname = "wuchang-blog"
 
 [Author] # Used in authorbox
   name = "TT"
-  bio = "Maybe he is a successful blogger or writer. Nobody knows it."
+  bio = "生命不息，折腾不止"
   avatar = "img/tt.jpg"
 
 [Params]
