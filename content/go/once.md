@@ -1,5 +1,5 @@
 ---
-title: Go Once 学习
+title: Go sync.Once 学习
 date: 2021-05-19
 disqus: false # 是否开启disqus评论
 categories:
@@ -16,36 +16,34 @@ Once 常常用来初始化单例资源，或者并发访问只需初始化一次
 
 ### 1. 定义 package 级别的变量
 ```go
-package abc
+package test
 
-import time
-
-var startTime = time.Now()
+var pi = 3.1415926
 ```
 
 ### 2. 在 init() 函数中初始化
 ```go
-package abc
+package test
 
-var startTime time.Time
+var pi float64
 
 func init() {
-  startTime = time.Now()
+    pi =  3.1415926
 }
 ```
 
 ### 3. 在 main 函数中执行初始化逻辑
 ```go
-package abc
+package test
 
-var startTime time.Tim
+var pi float64
 
 func initApp() {
-    startTime = time.Now()
+    pi = 3.1415926
 }
 
 func main() {
-  initApp()
+    initApp()
 }
 ```
 
@@ -53,73 +51,112 @@ func main() {
 
 ## 延迟初始化
 ```go
-
-
-package main
-
-import (
-    "net"
-    "sync"
-    "time"
-)
-
 // 使用互斥锁保证线程(goroutine)安全
-var connMu sync.Mutex
-var conn net.Conn
+var mu sync.Mutex
+var pi float64
 
-func getConn() net.Conn {
-    connMu.Lock()
-    defer connMu.Unlock()
+func getPI() float64 {
+	mu.Lock()
+	defer mu.Unlock()
 
-    // 返回已创建好的连接
-    if conn != nil {
-        return conn
-    }
+	if pi != 0 {
+		return pi
+	}
 
-    // 创建连接
-    conn, _ = net.DialTimeout("tcp", "baidu.com:80", 10*time.Second)
-    return conn
+	pi = 3.1415926
+	return pi
 }
 
-// 使用连接
 func main() {
-    conn := getConn()
-    if conn == nil {
-        panic("conn is nil")
-    }
+	pi := getPI()
+	if pi == 0 {
+		panic("pi is not initialized")
+	}
+	fmt.Printf("pi = %v\n", pi)
 }
 ```
-代码简单，线程安全，但是有性能问题。每次 `getConn` 都要抢夺锁，如果并发量很大，比较浪费资源。去掉锁吧，又会导致并发问题。
+代码简单，线程安全，但是有性能问题。每次 `getPI` 都要抢夺锁，如果并发量很大，比较浪费资源。去掉锁吧，又会导致并发问题。
 
 ## 使用 Once 延迟初始化单例对象
 使用 Once 重写延迟初始化的例子
 ```go
-package main
-
-import (
-    "net"
-    "sync"
-    "time"
-)
-
 var once sync.Once
-var conn net.Conn
+var pi float64
 
-func getConn() net.Conn {
-    once.Do(func() {
-        conn, _ = net.DialTimeout("tcp", "baidu.com:80", 10*time.Second)
-    })
-    return conn
+func getPI() float64 {
+	once.Do(func() {
+		pi = 3.1415926
+	})
+	return pi
 }
 
-// 使用连接
 func main() {
-    conn := getConn()
-    if conn == nil {
-        panic("conn is nil")
-    }
+	pi := getPI()
+	if pi == 0 {
+		panic("pi is not initialized")
+	}
+	fmt.Printf("pi = %v\n", pi)
 }
 ```
+
+## 猜测 Once 的实现
+
+```
+type Once struct {
+	done uint32
+}
+
+func (o *Once) Do(f func()) {
+	if atomic.CompareAndSwapUint32(&o.done, 0, 1) {
+		f()
+	}
+}
+```
+
+通过原子操作来争夺锁，抢到了就执行`f`，抢不到的说明有其它 goroutine 抢到了，活给它干就是，直接返回！
+
+上面的实现是有问题的，因为那些没有抢到执行资格的 `goroutine` 没等到 `f()` 执行完就返回了，继续执行后面的任务
+
+写个代码测试一下:
+```
+var once Once
+var pi float64
+
+func getPI() float64 {
+	once.Do(func() {
+		time.Sleep(1 * time.Second) // 慢点执行
+		pi = 3.1415926
+	})
+	return pi
+}
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		pi := getPI()
+		if pi == 0 {
+			fmt.Println("1 pi is zero")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		pi := getPI()
+		if pi == 0 {
+			fmt.Println("2 pi is zero")
+		}
+	}()
+
+	wg.Wait()
+}
+```
+执行上面的代码，总会输出某个 `pi is zero`，因为 pi 还没完成初始化，就被那些没抢到初始化权限的 goroutine 使用了。
+
 
 ## Once 的实现
 Once 结构体定义：
