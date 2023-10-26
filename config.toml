@@ -7,7 +7,7 @@ DisqusShortname = "wuchang-blog"
 [Author] # Used in authorbox
   name = "TT"
   bio = "生命不息，折腾不止"
-  avatar = "img/tt.jpg"
+  avatar = "img/icon.jpg"
 
 [Params]
   subtitle = "" # Deprecated in favor of .Site.Params.logo.subtitle
@@ -42,7 +42,7 @@ DisqusShortname = "wuchang-blog"
   fontFamilySecondary = "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
 
 [Params.logo]
-  image = "img/tt.jpg" # Logo image. Path relative to "static"
+  image = "img/icon.jpg" # Logo image. Path relative to "static"
   title = "TT的个人博客" # Logo title, otherwise will use site title
   subtitle = "Just For Fun" # Logo subtitle
 
