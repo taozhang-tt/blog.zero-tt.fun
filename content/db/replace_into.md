@@ -10,8 +10,6 @@ tags:
 
 <!--more-->
 
-# Mysql REPLACE INTO 问题
-
 ## 说背景
 
 查线上日志有一个报错 `"1062: Duplicate entry '54986956' for key 'PRIMARY'"`，很明显是主键冲突了。  
@@ -130,12 +128,14 @@ docker-compose up -d
 
 连接主库，即 `mysql-master` 容器对应的数据库，创建用户，用于主从同步
 ```
+# mysql-master
 CREATE USER repl;
 GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%' IDENTIFIED BY 'repl';
 ```
 
 查看 `master` 状态
 ```
+# mysql-master
 mysql> show master status;
 +------------------+----------+--------------+------------------+-------------------+
 | File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
@@ -149,6 +149,7 @@ Position 为当前binlog文件的偏移量，也即是从库要从此位置开�
 
 连接从库，即 `mysql-slave` 容器对应的数据库，设置连接主库的参数
 ```
+# mysql-slave
 CHANGE MASTER TO
     MASTER_HOST='mysql-master',
     MASTER_USER='repl',
@@ -161,11 +162,13 @@ MASTER_LOG_POS 从主库binlog的哪个位置开始同步
 
 启动 slave
 ```
+# mysql-slave
 start slave;
 ```
 
 查看 slave 状态
 ```
+# mysql-slave
 mysql> show slave status\G;
 *************************** 1. row ***************************
                Slave_IO_State: Waiting for master to send event
@@ -232,6 +235,7 @@ Master_SSL_Verify_Server_Cert: No
 
 主从同步设置完成后，就可以开始模拟了，先创建一个`test`数据库，然后建一张数据表 `score`，并插入一条测试数据
 ```
+# mysql-master
 CREATE DATABASE `test` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 USE `test`;
@@ -257,6 +261,7 @@ mysql> SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA =
 
 查看从库的数据库列表，发现已经成功同步了 `test` 数据库以及 `score` 数据表
 ```
+# mysql-slave
 mysql> show databases;
 +--------------------+
 | Database           |
@@ -287,6 +292,7 @@ mysql> SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA =
 
 执行 `REPLACE INTO` 语句
 ```
+# mysql-master
 REPLACE INTO `score` (`name`, `score`) VALUES ('zhangsan', 20);
 
 mysql> select * from score;
@@ -306,6 +312,7 @@ mysql> SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA =
 
 查看从库情况
 ```
+# mysql-slave
 mysql> select * from score;
 +----+----------+-------+
 | id | name     | score |
@@ -320,8 +327,9 @@ mysql> SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA =
 |              2 |
 +----------------+
 ```
-已经有id=2的记录，AUTO_INCREMENT=2，下次执行插入操作，必定会报主键冲突了，查看一下binlog内容，找找原因
+已经有id=2的记录，AUTO_INCREMENT=2，如果此时向该表执行插入操作，必定会报主键冲突了，查看一下binlog内容，找找原因
 ```
+# mysql-master
 mysql> show variables like 'log_%';
 +----------------------------------------+--------------------------------+
 | Variable_name                          | Value                          |
@@ -343,6 +351,7 @@ mysql> show variables like 'log_%';
 ```
 binlog 日志文件在 `/var/lib/mysql/` 目录，当前正在使用的文件是 `mysql-bin.000004`，查看binlog内容
 ```
+# mysql-master 容器中，/var/lib/mysql 目录下
 mysqlbinlog --verbose mysql-bin.000004
 
 /*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
