@@ -11,7 +11,7 @@ categories:
   
 ## 文件
 
-完整是文件放在这里：https://github.com/taozhang-tt/docker-file
+完整文件放在这里：[github](https://github.com/taozhang-tt/docker-file)
 
 创建`docker-file`目录，用于保存容器配置文件
 
@@ -110,6 +110,7 @@ networks:
 启动容器
 
 ```
+docker-file/mysql-master-slave 目录下执行：
 docker-compose build
 docker-compose up -d
 ```
@@ -134,8 +135,8 @@ mysql> show master status;
 +------------------+----------+--------------+------------------+-------------------+
 1 row in set (0.00 sec)
 ```
-File 为当前binlog文件名  
-Position 为当前binlog文件的偏移量，也即是从库要从此位置开始同步
+File 为当前 binlog 文件名  
+Position 为当前 binlog 文件的偏移量，也即是从库要从此位置开始同步
 
 连接从库，即 `mysql-slave` 容器对应的数据库，设置连接主库的参数
 ```
@@ -324,6 +325,3 @@ mysql> show slave status\G;
             ......
 ```
 主从切换成。
-
-
-
