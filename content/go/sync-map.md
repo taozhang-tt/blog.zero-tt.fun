@@ -27,7 +27,7 @@ tags:
 * 延迟删除。删除一个键值只是打标记，只有在提升 dirty 字段为 read 字段的时候才清理删除的数据。
 
 ## sync.Map 结构图
-![Map](http://pic.zero-tt.fun/note/Map.png)
+![Map](http://pic.zero-tt.top/note/Map.png)
 
 ## 疑问
 

@@ -12,7 +12,7 @@ tags:
 
 # 07 | 行锁功过：怎么减少行锁对性能的影响？
 
-![20210203091044](http://pic.zero-tt.fun/note/20210203091044.png)
+![20210203091044](http://pic.zero-tt.top/note/20210203091044.png)
 
 ## 行锁由引擎实现，InnoDB支持行锁，MyISAM不支持
 

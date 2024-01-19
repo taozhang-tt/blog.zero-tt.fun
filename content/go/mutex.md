@@ -14,12 +14,12 @@ tags:
 
 作者将 Mutex 的演进划分成了 4 个阶段：
 
-![20210422194742](http://pic.zero-tt.fun/note/20210422194742.png)
+![20210422194742](http://pic.zero-tt.top/note/20210422194742.png)
 
 ## 初版
 使用一个 key 字段标记是否持有锁，以及等待该锁的 goroutine 数量
 
-![20210422194929](http://pic.zero-tt.fun/note/20210422194929.png)
+![20210422194929](http://pic.zero-tt.top/note/20210422194929.png)
 
 [源码下载地址](https://codeload.github.com/golang/go/zip/refs/tags/go-weekly.2009-11-06)
 
@@ -67,7 +67,7 @@ func (m *Mutex) Unlock() {
 }
 
 ```
-关于 CAS 的介绍，可以参考另一篇博文[什么是 cas](http://zero-tt.fun/go/cas/)，这里不再赘述。
+关于 CAS 的介绍，可以参考另一篇博文[什么是 cas](http://zero-tt.top/go/cas/)，这里不再赘述。
 
 初版的 Mutex 挺简单的，尝试获取锁，拿到锁就直接返回，进行临界区的操作，操作完释放锁；然后判断一下有没有其它阻塞的 goroutine，有的话就唤醒一个。
 
@@ -89,7 +89,7 @@ type Mutex struct {
 }
 ```
 还是两个字段，包含的信息量却变多了；sema 还是信号量，state 是一个复合字段，含义如下图所示：
-![20210422151523](http://pic.zero-tt.fun/note/20210422151523.png)
+![20210422151523](http://pic.zero-tt.top/note/20210422151523.png)
 
 从最低位开始阐述：
 * 第1位：持有锁的标记，锁被持有时为 1，未被持有为 0
@@ -137,7 +137,7 @@ func (m *Mutex) Lock() {
 上锁的操作和 **初版** 已经不一样了，被唤醒的顺序虽然没有改变，但是被唤醒的 waiter 并不是像 **初版** 里的那样直接获取到锁，而是要和新来的 goroutine 竞争。
 
 总结一下，goroutine 有两类：新来的、被唤醒的；锁的状态有两种：加锁、未加锁；下面的表格展示了处理逻辑
-![20210422163949](http://pic.zero-tt.fun/note/20210422163949.png)
+![20210422163949](http://pic.zero-tt.top/note/20210422163949.png)
 
 解锁：
 ```go
@@ -240,7 +240,7 @@ func (m *Mutex) Lock() {
 思路挺简单：每次抢夺锁的时候，如果产生了饥饿问题，就让被唤醒的 goroutine 有更大的机会获取锁，新来的同志等一等。
 
 一起来看下代码实现，首先是 Mutex 结构体的 state 字段，它又被拆出一位，用于记录当前是否处于饥饿状态
-![20210422192730](http://pic.zero-tt.fun/note/20210422192730.png)
+![20210422192730](http://pic.zero-tt.top/note/20210422192730.png)
 
 常量的定义：
 ```go

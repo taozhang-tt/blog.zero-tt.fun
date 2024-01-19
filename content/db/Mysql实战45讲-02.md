@@ -12,7 +12,7 @@ tags:
 
 # 02 | 日志系统：一条SQL更新语句是如何执行的
 
-![20210203090707](http://pic.zero-tt.fun/note/20210203090707.png)
+![20210203090707](http://pic.zero-tt.top/note/20210203090707.png)
 
 ## 什么是 redo log？
 
@@ -41,7 +41,7 @@ binlog是在server层实现的**归档日志**
 
 ## 什么是两阶段提交
 `update T set c=c+1 where id=2` 的执行过程大致如下（浅色在InnoDB内部，深色在执行器中）：
-![20201217191240](http://pic.zero-tt.fun/note/20201217191240.png)
+![20201217191240](http://pic.zero-tt.top/note/20201217191240.png)
 更新操作过程中，先把操作记录写入 redo log 并将 redo log 标记为 prepare 状态，然后写入 binlog，最后再提交事务并将 redo log 的状态更改为 commit
 
 ## 为什么要使用两阶段提交

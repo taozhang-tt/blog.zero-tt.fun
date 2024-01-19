@@ -117,7 +117,7 @@ func main() {
     fmt.Println("所有运动员都准备就绪。比赛开始，3，2，1, ......")
 }
 ```
-关于代码里的一些细节，我们有必要说明一下，`readyCnt++` 需要加锁，这个很明显，如果不了解可以移步看另一篇博文 [什么是 CAS](http://zero-tt.fun/go/cas/)。对于 `c.Wait()` 的操作，需要先获取锁，这是由它的实现来决定的。
+关于代码里的一些细节，我们有必要说明一下，`readyCnt++` 需要加锁，这个很明显，如果不了解可以移步看另一篇博文 [什么是 CAS](http://zero-tt.top/go/cas/)。对于 `c.Wait()` 的操作，需要先获取锁，这是由它的实现来决定的。
 ```go
 // Wait atomically unlocks c.L and suspends execution
 // of the calling goroutine. After later resuming execution,

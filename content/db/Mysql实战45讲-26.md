@@ -16,7 +16,7 @@ tags:
 
 io_thread 线程负责接收 binlog 并存入 relay log
 sql_thread 线程负责读取 relay log 并执行，我们可以把这里改成多个线程并行的，具体就是一个 coordinator 负责读取 relay log 并解析，然后分发给不同的 worker 执行
-![20210202160926](http://pic.zero-tt.fun/note/20210202160926.png)
+![20210202160926](http://pic.zero-tt.top/note/20210202160926.png)
 
 ## 多线程复制的原则
 

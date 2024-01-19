@@ -13,7 +13,7 @@ tags:
 
 # 01 | 基础架构：一条SQL查询语句是如何执行的？
 
-![20210203090457](http://pic.zero-tt.fun/note/20210203090457.png)
+![20210203090457](http://pic.zero-tt.top/note/20210203090457.png)
 
 ## MySQL的基本架构是什么样子的
 ![20200409170440](https://taozhang.oss-cn-hongkong.aliyuncs.com/note/20200409170440.png)

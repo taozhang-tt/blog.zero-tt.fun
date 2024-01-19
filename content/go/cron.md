@@ -120,7 +120,7 @@ func (f FuncJob) Run() { f() }
 FuncJob 实际就是一个 `func()` 类型，实现了 `Run()` 方法。
 
 ### 2.3 修饰器加工 Job
-修饰器可以有多种，先定义一下修饰器的类型，关于修饰器的说明，可以看我另一篇文章[《Go 修饰器》](http://zero-tt.fun/decorator)
+修饰器可以有多种，先定义一下修饰器的类型，关于修饰器的说明，可以看我另一篇文章[《Go 修饰器》](http://zero-tt.top/decorator)
 ```go
 type JobWrapper func(Job) Job
 ```
